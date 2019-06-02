@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "818230826647",
+    "firebase_url": "https://flash-card-app-68850.firebaseio.com",
+    "project_id": "flash-card-app-68850",
+    "storage_bucket": "flash-card-app-68850.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:818230826647:android:2214984f727475d3",
+        "android_client_info": {
+          "package_name": "com.redrebel29.flash_it"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "818230826647-hdg6hmlt7postv47euiki711evh8rcj9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.redrebel29.flash_it",
+            "certificate_hash": "c0e1076a768876508f4f12b9004aa3f62a71299a"
+          }
+        },
+        {
+          "client_id": "818230826647-1ee3v676ml07sa77msr47nmm0ik1jmda.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDlIrlexchklpl7sKL1pkGcK8CnJaT9_XQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "818230826647-1ee3v676ml07sa77msr47nmm0ik1jmda.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
