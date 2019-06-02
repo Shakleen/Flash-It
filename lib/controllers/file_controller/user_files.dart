@@ -5,12 +5,12 @@ import 'package:path_provider/path_provider.dart';
 class UserFiles {
   static final UserFiles files = UserFiles._();
   final String topicFileName = "Topics";
-  final String topicJsonName = "Topics.json";
+  final String topicJsonName = "FlashItTopics.json";
   final String deckFileName = "Decks";
-  final String deckJsonName = "Decks.json";
+  final String deckJsonName = "FlashItDecks.json";
   final String cardFileName = "Cards";
-  final String cardJsonName = "Cards.json";
-  final String settingsFileName = "Settings.json";
+  final String cardJsonName = "FlashItCards.json";
+  final String settingsFileName = "FlashItSettings.json";
 
   UserFiles._();
 

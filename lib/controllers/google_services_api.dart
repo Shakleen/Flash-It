@@ -61,45 +61,41 @@ class GoogleServicesAPI {
   /// safe keeping. This method handles the syncing of 4 files which are mainly
   /// Topic.db, Deck.db, Card.db and Settings.json
   Future<void> sync() async {
-//    // Sync topics
-//    await _sync(
-//      EditUserSettings.edit.settings.topicDBFileID,
-//      UserFiles.files.topicFileName,
-//      UserFiles.files.topicFileDescription,
-//      await UserFiles.files.topicFile,
-//      EditUserSettings.edit.modifyTopicFileID,
-//      await UserFiles.files.topicFilePath,
-//    );
-//
-//    // Sync Decks
-//    await _sync(
-//      EditUserSettings.edit.settings.deckDBFileID,
-//      UserFiles.files.deckFileName,
-//      UserFiles.files.deckFileDescription,
-//      await UserFiles.files.deckFile,
-//      EditUserSettings.edit.modifyDeckFileID,
-//      await UserFiles.files.deckFilePath,
-//    );
-//
-//    // Sync cards
-//    await _sync(
-//      EditUserSettings.edit.settings.cardDBFileID,
-//      UserFiles.files.cardFileName,
-//      UserFiles.files.cardFileDescription,
-//      await UserFiles.files.cardFile,
-//      EditUserSettings.edit.modifyCardFileID,
-//      await UserFiles.files.cardFilePath,
-//    );
-//
-//    // Sync settings
-//    await _sync(
-//      EditUserSettings.edit.settings.settingsFileID,
-//      UserFiles.files.settingsFileName,
-//      UserFiles.files.settingsFileDescription,
-//      await UserFiles.files.settingsFile,
-//      EditUserSettings.edit.modifySettingsFileID,
-//      await UserFiles.files.settingsFilePath,
-//    );
+    // Sync topics
+    await _sync(
+      EditUserSettings.edit.settings.topicFileID,
+      UserFiles.files.topicJsonName,
+      await UserFiles.files.topicJson,
+      EditUserSettings.edit.modifyTopicFileID,
+      await UserFiles.files.topicJsonPath,
+    );
+
+    // Sync Decks
+    await _sync(
+      EditUserSettings.edit.settings.deckFileID,
+      UserFiles.files.deckJsonName,
+      await UserFiles.files.deckJson,
+      EditUserSettings.edit.modifyDeckFileID,
+      await UserFiles.files.deckJsonPath,
+    );
+
+    // Sync cards
+    await _sync(
+      EditUserSettings.edit.settings.cardFileID,
+      UserFiles.files.cardJsonName,
+      await UserFiles.files.cardJson,
+      EditUserSettings.edit.modifyCardFileID,
+      await UserFiles.files.cardJsonPath,
+    );
+
+    // Sync settings
+    await _sync(
+      EditUserSettings.edit.settings.settingsFileID,
+      UserFiles.files.settingsFileName,
+      await UserFiles.files.settingsFile,
+      EditUserSettings.edit.modifySettingsFileID,
+      await UserFiles.files.settingsFilePath,
+    );
   }
 
   /// Helper method for syncing file content.
@@ -127,19 +123,16 @@ class GoogleServicesAPI {
   Future<void> _sync(
     String fileID,
     String metaName,
-    String metaDescription,
     io.File file,
     Function(String fileID) modify,
     String filePath,
   ) async {
-    final String debug = 'GoogleServicesAPI - _sync';
+    final String debug = 'GoogleServicesAPI - _sync'; //TODO DEBUG
     print('$debug Started syncing $metaName!'); // TODO DEBUG
 
     // Create meta data
     final File meta = File();
-    meta
-      ..name = metaName
-      ..description = metaDescription;
+    meta.name = metaName;
 
     // File id is known in local settings file.
     if (fileID != null) {
@@ -151,13 +144,16 @@ class GoogleServicesAPI {
     }
 
     // File id isn't in local settings file. Check if file is in drive.
-    final String id = await _checkDriveForFileID(metaName, metaDescription);
+    final String id = await _checkDriveForFileID(metaName);
 
     // File is in drive. Download and create local copy.
     if (id != null) {
       print('$debug file in drive. Making local copy!'); // TODO DEBUG
-      UserFiles.files
-          .write(await _downloadFileContentFromDrive(id), file, filePath);
+      UserFiles.files.write(
+        await _downloadFileContentFromDrive(id),
+        file,
+        filePath,
+      );
       return;
     }
 
@@ -172,7 +168,7 @@ class GoogleServicesAPI {
   /// [description] as meta data.
   ///
   /// Returns the right file id or null.
-  Future<String> _checkDriveForFileID(String name, String description) async {
+  Future<String> _checkDriveForFileID(String name) async {
     FileList result;
     final String debug =
         'GoogleServicesAPI - _checkDriveForFileID'; // TODO DEBUG
@@ -222,6 +218,8 @@ class GoogleServicesAPI {
   }
 
   /// Helper method for creating a new file and uploading it to google drive.
+  ///
+  /// THe file will have [meta] as meta data and [file] as contents.
   Future<String> _createNew(File meta, io.File file) async {
     final File uploaded = await _driveApi.files.create(
       meta,

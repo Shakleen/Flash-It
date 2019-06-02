@@ -5,7 +5,7 @@ import 'package:flash_it/models/entities/user_settings.dart';
 
 class EditUserSettings {
   static final EditUserSettings edit = EditUserSettings._();
-  UserSettings settings;
+  SettingsModel settings;
 
   EditUserSettings._();
 
@@ -25,7 +25,7 @@ class EditUserSettings {
       if (contents == null) await _createNew();
       contents = await UserFiles.files.settingsFileContentString;
       print('$debug Settings read are: $contents'); // TODO DEBUG
-      settings = UserSettings.fromMap(json.decode(contents));
+      settings = SettingsModel.fromMap(json.decode(contents));
       status = settings != null;
     } catch (e) {
       print('$debug ${e.runtimeType} $e'); // TODO DEBUG
@@ -40,7 +40,7 @@ class EditUserSettings {
     final String debug = 'UserFiles - _createNew -'; // TODO DEBUG
     try {
       print('$debug Creating new settings file!'); // TODO DEBUG
-      settings = UserSettings.basic();
+      settings = SettingsModel.basic();
       return _write();
     } catch (e) {
       print('$debug Exception occured! $e'); // TODO DEBUG
@@ -70,17 +70,32 @@ class EditUserSettings {
   }
 
   void modifyTopicFileID(String fileID) {
-    settings.topicDBFileID = fileID;
+    settings.topicFileID = fileID;
     _write();
   }
 
   void modifyDeckFileID(String fileID) {
-    settings.deckDBFileID = fileID;
+    settings.deckFileID = fileID;
     _write();
   }
 
   void modifyCardFileID(String fileID) {
-    settings.cardDBFileID = fileID;
+    settings.cardFileID = fileID;
+    _write();
+  }
+
+  void incrementTopicCount() {
+    settings.topics += 1;
+    _write();
+  }
+
+  void incrementDeckCount() {
+    settings.decks += 1;
+    _write();
+  }
+
+  void incrementCardCount() {
+    settings.cards += 1;
     _write();
   }
 }

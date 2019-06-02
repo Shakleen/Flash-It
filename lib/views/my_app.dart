@@ -19,18 +19,19 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) => MaterialApp(
-        key: Key("_MyAppState"),
-        title: "Flash It!",
-        home: LogInPage(),
-        theme: themes[EditUserSettings.edit.settings.appThemeColor],
-        routes: {
-          'home': (BuildContext context) => HomePage(),
-          'settings': (BuildContext context) => SettingsPage(
-                changeTheme: _changeTheme,
-              ),
-          'about': (BuildContext context) => AboutPage(),
-        },
-      );
+    key: Key("_MyAppState"),
+    title: "Flash It!",
+    home: LogInPage(),
+    theme: themes[EditUserSettings.edit.settings.appThemeColor],
+    routes: {
+      'home': (BuildContext context) => HomePage(),
+      'settings': (BuildContext context) =>
+          SettingsPage(
+            changeTheme: _changeTheme,
+          ),
+      'about': (BuildContext context) => AboutPage(),
+    },
+  );
 
   void _changeTheme() {
     setState(() {});

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flash_it/bloc/bloc_provider.dart';
+import 'package:flash_it/controllers/file_controller/card_file.dart';
 import 'package:flash_it/models/database/card_database.dart';
 import 'package:flash_it/models/entities/card_model.dart';
 
@@ -77,80 +78,87 @@ class CardDatabaseBloc implements BlocBase {
     input[cardAttributes[6][0]] =
         DateTime(now.year, now.month, now.day).toString();
     return CardDatabase.cardDatabase.insert(input).then((bool status) {
-      if (status) getItems();
+      if (status) {
+        CardFile.cardFile.add(input);
+        getItems();
+      }
       return status;
     });
   }
 
   Future<bool> delete(dynamic card) {
     return CardDatabase.cardDatabase.delete(card.toMap()).then((bool status) {
-      if (status) getItems();
+      if (status) {
+        CardFile.cardFile.remove(card.toMap());
+        getItems();
+      }
       return status;
     });
   }
 
-  Future<bool> update(Map<String, dynamic> input, Map<String, dynamic> old) {
+  Future<bool> update(Map<String, dynamic> newValue,
+      Map<String, dynamic> oldValue,) {
     final DateTime now = DateTime.now();
-    input[cardAttributes[6][0]] =
+    newValue[cardAttributes[6][0]] =
         DateTime(now.year, now.month, now.day).toString();
-    input[cardAttributes[4][0]] = 0;
-    return CardDatabase.cardDatabase.update(input).then((bool status) {
-      if (status) getItems();
-      return status;
-    });
+    newValue[cardAttributes[4][0]] = 0;
+    return updateDatabase(
+      CardModel.fromMap(oldValue),
+      CardModel.fromMap(newValue),
+    );
   }
 
-  Future<bool> markImportant(CardModel cardModel) {
-    final CardModel card = CardModel(
-      question: cardModel.question,
-      answer: cardModel.answer,
-      memoryState: cardModel.memoryState,
-      cardID: cardModel.cardID,
-      deckID: cardModel.deckID,
-      important: !cardModel.important,
-      nextQuizDate: cardModel.nextQuizDate,
+  Future<bool> markImportant(CardModel newValue) {
+    final CardModel oldValue = CardModel(
+      question: newValue.question,
+      answer: newValue.answer,
+      memoryState: newValue.memoryState,
+      cardID: newValue.cardID,
+      deckID: newValue.deckID,
+      important: !newValue.important,
+      nextQuizDate: newValue.nextQuizDate,
     );
-    return CardDatabase.cardDatabase.update(card.toMap()).then((bool status) {
-      if (status) getItems();
-      return status;
-    });
+    return updateDatabase(newValue, oldValue);
   }
 
   Future<int> getTotal() => CardDatabase.cardDatabase.getItemCount();
 
-  Future<bool> guessedCorrect(CardModel cardModel) {
-    final int memState = cardModel.memoryState + 1;
-    DateTime after = cardModel.nextQuizDate;
+  Future<bool> guessedCorrect(CardModel newValue) {
+    final int memState = newValue.memoryState + 1;
+    DateTime after = newValue.nextQuizDate;
     if (after.isBefore(DateTime.now())) after = DateTime.now();
     final DateTime nextQuiz = after.add(Duration(hours: 12 * memState));
-    final CardModel card = CardModel(
-      question: cardModel.question,
-      answer: cardModel.answer,
+    final CardModel oldValue = CardModel(
+      question: newValue.question,
+      answer: newValue.answer,
       memoryState: memState,
-      cardID: cardModel.cardID,
-      deckID: cardModel.deckID,
-      important: cardModel.important,
+      cardID: newValue.cardID,
+      deckID: newValue.deckID,
+      important: newValue.important,
       nextQuizDate: nextQuiz,
     );
-    return CardDatabase.cardDatabase.update(card.toMap()).then((bool status) {
-      if (status) getItems();
-      return status;
-    });
+    return updateDatabase(oldValue, newValue);
   }
 
-  Future<bool> guessedWrong(CardModel cardModel) {
-    final CardModel card = CardModel(
-      question: cardModel.question,
-      answer: cardModel.answer,
+  Future<bool> guessedWrong(CardModel oldValue) {
+    final CardModel newValue = CardModel(
+      question: oldValue.question,
+      answer: oldValue.answer,
       memoryState: 0,
-      cardID: cardModel.cardID,
-      deckID: cardModel.deckID,
-      important: cardModel.important,
-      nextQuizDate: cardModel.nextQuizDate,
+      cardID: oldValue.cardID,
+      deckID: oldValue.deckID,
+      important: oldValue.important,
+      nextQuizDate: oldValue.nextQuizDate,
     );
-    return CardDatabase.cardDatabase.update(card.toMap()).then((bool status) {
-      if (status) getItems();
-      return status;
-    });
+    return updateDatabase(newValue, oldValue);
   }
+
+  Future<bool> updateDatabase(CardModel oldValue, CardModel newValue) async =>
+      CardDatabase.cardDatabase.update(newValue.toMap()).then((bool status) {
+        if (status) {
+          CardFile.cardFile.update(oldValue.toMap(), newValue.toMap());
+          getItems();
+        }
+        return status;
+      });
 }
