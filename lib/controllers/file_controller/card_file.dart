@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flash_it/controllers/file_controller/user_files.dart';
+import 'package:flash_it/models/database/card_database.dart';
 import 'package:flash_it/models/entities/card_model.dart';
 
 /// Class for handling the reading, writing and manipulation of the card.json
@@ -35,7 +36,15 @@ class CardFile {
         newValue: newValue,
       );
 
-  /// Helper method for reading, decoding and adding contents of the file
+  /// Method to recreate the database from the information in the files.
+  void createDatabase() async {
+    await _read();
+
+    for (CardModel card in cards)
+      CardDatabase.cardDatabase.insert(card.toMap());
+  }
+
+  /// Private method for reading, decoding and adding contents of the file
   /// card.json to the list [cards].
   Future<void> _read() async {
     final String debug = "CardFile - _read"; // TODO DEBUG
@@ -51,7 +60,7 @@ class CardFile {
     }
   }
 
-  /// Helper method for encoding and writing the contents of [cards] into
+  /// Private method for encoding and writing the contents of [cards] into
   /// the file cards.json
   Future<void> _write() async {
     final String debug = "CardFile - _write"; // TODO DEBUG
@@ -67,7 +76,7 @@ class CardFile {
     );
   }
 
-  /// Helper method to manipulate the contents of the file card.json
+  /// Private method to manipulate the contents of the file card.json
   ///
   /// This method first reads from the file card.json to get all its contents.
   /// Then it performs the [op1] with [value] as an argument, which can be add
@@ -79,19 +88,15 @@ class CardFile {
     Function(CardModel value) op2,
     Map<String, dynamic> newValue,
   }) async {
-    value['id'] = null;
     await _read();
     print("Value received is $value");
     for (CardModel card in cards) print('${card.toMap()}');
     print(op1(CardModel.fromMap(value)));
-    if (newValue != null) {
-      newValue['id'] = null;
-      op2(CardModel.fromMap(newValue));
-    }
+    if (newValue != null) op2(CardModel.fromMap(newValue));
     _write();
   }
 
-  /// Helper method to check and delete appropriate card from the list [cards].
+  /// Private method to check and delete appropriate card from the list [cards].
   ///
   /// The method compares the set dates to identify the appropriate card. As
   /// the set time is accurate upto the microsecond it is impossible for two
@@ -106,7 +111,7 @@ class CardFile {
     return false;
   }
 
-  /// Helper method to check and add card to the list [cards].
+  /// Private method to check and add card to the list [cards].
   ///
   /// The method compares the set dates to identify appropriate card. As
   /// the set time is accurate upto the microsecond it is impossible for two

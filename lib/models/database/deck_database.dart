@@ -38,18 +38,17 @@ class DeckDatabase implements BaseDatabase {
 
   @override
   Future<bool> insert(Map<String, dynamic> item) async {
-//    final String debug = '${this.runtimeType} insert'; // TODO DEBUG
+    final String debug = '${this.runtimeType} insert'; // TODO DEBUG
     bool status = false;
-    item.remove(primaryKey);
 
     try {
       await database.insert(tableName, item);
       status = true;
     } catch (e) {
-//      print('$debug $e'); // TODO DEBUG
+      print('$debug $e'); // TODO DEBUG
     }
 
-//    print('$debug insertion status: $status'); // TODO DEBUG
+    print('$debug insertion status: $status'); // TODO DEBUG
     return status;
   }
 

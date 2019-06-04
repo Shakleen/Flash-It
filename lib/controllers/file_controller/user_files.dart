@@ -4,21 +4,12 @@ import 'package:path_provider/path_provider.dart';
 
 class UserFiles {
   static final UserFiles files = UserFiles._();
-  final String topicFileName = "Topics";
   final String topicJsonName = "FlashItTopics.json";
-  final String deckFileName = "Decks";
   final String deckJsonName = "FlashItDecks.json";
-  final String cardFileName = "Cards";
   final String cardJsonName = "FlashItCards.json";
   final String settingsFileName = "FlashItSettings.json";
 
   UserFiles._();
-
-  Future<String> get topicFilePath async => _getPath(topicFileName);
-
-  Future<String> get deckFilePath async => _getPath(deckFileName);
-
-  Future<String> get cardFilePath async => _getPath(cardFileName);
 
   Future<String> get topicJsonPath async => _getPath(topicJsonName);
 
@@ -28,12 +19,6 @@ class UserFiles {
 
   Future<String> get settingsFilePath async => _getPath(settingsFileName);
 
-  Future<File> get topicFile async => _getFile(topicFileName);
-
-  Future<File> get deckFile async => _getFile(deckFileName);
-
-  Future<File> get cardFile async => _getFile(cardFileName);
-
   Future<File> get topicJson async => _getFile(topicJsonName);
 
   Future<File> get deckJson async => _getFile(deckJsonName);
@@ -41,15 +26,6 @@ class UserFiles {
   Future<File> get cardJson async => _getFile(cardJsonName);
 
   Future<File> get settingsFile async => _getFile(settingsFileName);
-
-  Future<String> get topicFileContentString async =>
-      _getFileContentString(topicFileName);
-
-  Future<String> get deckFileContentString async =>
-      _getFileContentString(deckFileName);
-
-  Future<String> get cardFileContentString async =>
-      _getFileContentString(cardFileName);
 
   Future<String> get topicJsonContentString async =>
       _getFileContentString(topicJsonName);
@@ -76,16 +52,28 @@ class UserFiles {
   Future<File> _getFile(String fileName) async {
     final String path = await _localPath;
     final File returnFile = File('$path/$fileName');
-    if (await returnFile.exists()) return returnFile;
-    return null;
+    if ((await returnFile.exists()) == false)
+      await write(
+        '',
+        returnFile,
+        '$path/$fileName',
+      );
+    return returnFile;
   }
 
   Future<String> _getFileContentString(String fileName) async {
     final File file = await _getFile(fileName);
-    if (file != null) return file.readAsString();
+    if (await file.exists())
+      return file.readAsString().then((String value) {
+        print('Content read is $value');
+        return value;
+      });
     return null;
   }
 
-  Future<bool> write(String content, File file, String filePath) async =>
-      await File(filePath).writeAsString(content) != null;
+  Future<bool> write(String content, File file, String filePath) async {
+    print('Writing content to file:\n$content');
+    return await File(filePath).writeAsString(content) != null;
+  }
+
 }

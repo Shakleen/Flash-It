@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flash_it/controllers/file_controller/user_files.dart';
+import 'package:flash_it/models/database/deck_database.dart';
 import 'package:flash_it/models/entities/deck_model.dart';
 
 /// Class for handling the reading, writing and manipulation of the deck.json
@@ -35,7 +36,15 @@ class DeckFile {
         newValue: newValue,
       );
 
-  /// Helper method for reading, decoding and adding contents of the file
+  /// Method to recreate the database from the information in the files.
+  void createDatabase() async {
+    await _read();
+
+    for (DeckModel deck in decks)
+      DeckDatabase.deckDatabase.insert(deck.toMap());
+  }
+
+  /// Private method for reading, decoding and adding contents of the file
   /// deck.json to the list [decks].
   Future<void> _read() async {
     final String debug = "DeckFile - _read"; // TODO DEBUG
@@ -51,7 +60,7 @@ class DeckFile {
     }
   }
 
-  /// Helper method for encoding and writing the contents of [decks] into
+  /// Private method for encoding and writing the contents of [decks] into
   /// the file decks.json
   Future<void> _write() async {
     final String debug = "DeckFile - _write"; // TODO DEBUG
@@ -67,7 +76,7 @@ class DeckFile {
     );
   }
 
-  /// Helper method to manipulate the contents of the file deck.json
+  /// Private method to manipulate the contents of the file deck.json
   ///
   /// This method first reads from the file deck.json to get all its contents.
   /// Then it performs the [op1] with [value] as an argument, which can be add
@@ -79,19 +88,15 @@ class DeckFile {
     Function(DeckModel value) op2,
     Map<String, dynamic> newValue,
   }) async {
-    value['id'] = null;
     await _read();
     print("Value received is $value");
     for (DeckModel deck in decks) print('${deck.toMap()}');
     print(op1(DeckModel.fromMap(value)));
-    if (newValue != null) {
-      newValue['id'] = null;
-      op2(DeckModel.fromMap(newValue));
-    }
+    if (newValue != null) op2(DeckModel.fromMap(newValue));
     _write();
   }
 
-  /// Helper method to check and delete appropriate deck from the list [decks].
+  /// Private method to check and delete appropriate deck from the list [decks].
   ///
   /// The method compares the set dates to identify the appropriate deck. As
   /// the set time is accurate upto the microsecond it is impossible for two
@@ -107,18 +112,15 @@ class DeckFile {
     return false;
   }
 
-  /// Helper method to check and add deck to the list [decks].
+  /// Private method to check and add deck to the list [decks].
   ///
-  /// The method compares the set dates to identify appropriate deck. As
-  /// the set time is accurate upto the microsecond it is impossible for two
-  /// decks to have the same creation time. If a deck with the same set date
-  /// exists in the list then [deck] isn't added.
+  /// The method compares the id to identify appropriate deck. If a deck with
+  /// the same id exists in the list then [deck] isn't added.
   bool _addTodeck(DeckModel deck) {
-    DateTime createdDate = deck.creationDate;
     bool found = false;
 
     for (int i = 0; i < decks.length; ++i)
-      if (decks[i].creationDate == createdDate) {
+      if (decks[i].id == deck.id) {
         found = true;
         break;
       }

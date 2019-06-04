@@ -66,7 +66,7 @@ class CardModel implements BaseModel {
 }
 
 final Map<int, List<String>> cardAttributes = const {
-  0: ['cardID', 'INTEGER', 'PRIMARY KEY AUTOINCREMENT'],
+  0: ['cardID', 'INTEGER', 'PRIMARY KEY'],
   1: ['deckID', 'INTEGER', 'NOT NULL'],
   2: ['question', 'TEXT', 'NOT NULL'],
   3: ['answer', 'TEXT', 'NOT NULL'],

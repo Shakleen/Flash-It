@@ -60,7 +60,7 @@ class DeckModel implements BaseModel {
 }
 
 final Map<int, List<String>> deckAttributes = const {
-  0: ['id', 'INTEGER', 'PRIMARY KEY AUTOINCREMENT'],
+  0: ['id', 'INTEGER', 'PRIMARY KEY'],
   1: ['name', 'TEXT', 'NOT NULL'],
   2: ['description', 'TEXT', 'NOT NULL'],
   3: ['creationDate', 'DATETIME', 'NOT NULL'],

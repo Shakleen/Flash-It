@@ -22,7 +22,7 @@ import 'package:meta/meta.dart';
 /// related information. This ID is given by the google drive system.
 /// [cardFileID] - The file ID of the card file that keeps all the card
 /// related information. This ID is given by the google drive system.
-class SettingsModel {
+class SettingsModel implements BaseModel {
   bool loggedIn;
   int appThemeColor, cardsPerQuiz, topics, decks, cards;
   DateTime notificationTime, syncTime;
@@ -75,9 +75,9 @@ class SettingsModel {
         deckFileID: input[userSettingParams[6]],
         cardFileID: input[userSettingParams[7]],
         settingsFileID: input[userSettingParams[8]],
-        topics: input[userSettingParams[9]],
-        decks: input[userSettingParams[10]],
-        cards: input[userSettingParams[11]],
+        topics: convertInt(input[userSettingParams[9]]),
+        decks: convertInt(input[userSettingParams[10]]),
+        cards: convertInt(input[userSettingParams[11]]),
       );
 
 
@@ -113,11 +113,11 @@ class SettingsModel {
       case 8:
         return this.settingsFileID;
       case 9:
-        return this.topics;
+        return this.topics.toString();
       case 10:
-        return this.decks;
+        return this.decks.toString();
       case 11:
-        return this.cards;
+        return this.cards.toString();
     }
     return null;
   }
@@ -129,11 +129,11 @@ final Map<int, String> userSettingParams = const {
   2: 'cardsPerQuiz',
   3: 'notificationTime',
   4: 'syncTime',
-  5: 'topicDBFileID',
-  6: 'deckDBFileID',
-  7: 'cardDBFileID',
+  5: 'topicFileID',
+  6: 'deckFileID',
+  7: 'cardFileID',
   8: 'settingsFileID',
-  9: 'topicID',
-  10: 'deckID',
-  11: 'cardID',
+  9: 'topics',
+  10: 'decks',
+  11: 'cards',
 };

@@ -45,3 +45,8 @@ class _BlocProviderState<T> extends State<BlocProvider<BlocBase>> {
     return widget.child;
   }
 }
+
+String getCurrentDateAsString() {
+  final DateTime now = DateTime.now();
+  return DateTime(now.year, now.month, now.day).toString();
+}

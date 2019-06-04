@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flash_it/bloc/bloc_provider.dart';
 import 'package:flash_it/controllers/file_controller/deck_file.dart';
+import 'package:flash_it/controllers/file_controller/edit_user_settings.dart';
 import 'package:flash_it/models/database/card_database.dart';
 import 'package:flash_it/models/database/deck_database.dart';
 import 'package:flash_it/models/entities/deck_model.dart';
@@ -54,12 +55,12 @@ class DeckDatabaseBloc implements BlocBase {
   ) {}
 
   Future<bool> insert(Map<String, dynamic> input) {
-    final DateTime now = DateTime.now();
-    final String nowstr = DateTime(now.year, now.month, now.day).toString();
-    input[deckAttributes[3][0]] = nowstr;
-    input[deckAttributes[4][0]] = nowstr;
+    input[deckAttributes[0][0]] = EditUserSettings.edit.settings.decks;
+    input[deckAttributes[3][0]] = getCurrentDateAsString();
+    input[deckAttributes[4][0]] = getCurrentDateAsString();
     return DeckDatabase.deckDatabase.insert(input).then((bool status) {
       if (status) {
+        EditUserSettings.edit.incrementDeckCount();
         DeckFile.deckFile.add(input);
         getItems();
       }
@@ -78,10 +79,8 @@ class DeckDatabaseBloc implements BlocBase {
   }
 
   Future<bool> update(Map<String, dynamic> input, Map<String, dynamic> old) {
-    final DateTime now = DateTime.now();
-    final String nowstr = DateTime(now.year, now.month, now.day).toString();
-    input[deckAttributes[3][0]] = nowstr;
-    input[deckAttributes[4][0]] = nowstr;
+    input[deckAttributes[3][0]] = getCurrentDateAsString();
+    input[deckAttributes[4][0]] = getCurrentDateAsString();
     return DeckDatabase.deckDatabase.update(input).then((bool status) {
       if (status) {
         DeckFile.deckFile.update(old, input);
@@ -92,12 +91,11 @@ class DeckDatabaseBloc implements BlocBase {
   }
 
   Future<bool> updateLastViewed(DeckModel deck) {
-    final DateTime now = DateTime.now();
-    DeckModel newDeck = DeckModel(
+    final DeckModel newDeck = DeckModel(
       name: deck.name,
       description: deck.description,
       creationDate: deck.creationDate,
-      lastViewedDate: DateTime(now.year, now.month, now.day),
+      lastViewedDate: DateTime.parse(getCurrentDateAsString()),
       id: deck.id,
       topicID: deck.topicID,
     );

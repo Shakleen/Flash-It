@@ -2,7 +2,10 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io' as io;
 
+import 'package:flash_it/controllers/file_controller/card_file.dart';
+import 'package:flash_it/controllers/file_controller/deck_file.dart';
 import 'package:flash_it/controllers/file_controller/edit_user_settings.dart';
+import 'package:flash_it/controllers/file_controller/topic_file.dart';
 import 'package:flash_it/controllers/file_controller/user_files.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/drive/v3.dart';
@@ -59,37 +62,17 @@ class GoogleServicesAPI {
   ///
   /// The application stores data locally for easy access and in the cloud for
   /// safe keeping. This method handles the syncing of 4 files which are mainly
-  /// Topic.db, Deck.db, Card.db and Settings.json
-  Future<void> sync() async {
-    // Sync topics
-    await _sync(
-      EditUserSettings.edit.settings.topicFileID,
-      UserFiles.files.topicJsonName,
-      await UserFiles.files.topicJson,
-      EditUserSettings.edit.modifyTopicFileID,
-      await UserFiles.files.topicJsonPath,
-    );
+  /// Topic.json, Deck.json, Card.json and Settings.json
+  Future<void> syncData() async {
+    await _handleSettingsSync();
+    await _handleTopicSync();
+    await _handleDeckSync();
+    await _handleCardSync();
+  }
 
-    // Sync Decks
-    await _sync(
-      EditUserSettings.edit.settings.deckFileID,
-      UserFiles.files.deckJsonName,
-      await UserFiles.files.deckJson,
-      EditUserSettings.edit.modifyDeckFileID,
-      await UserFiles.files.deckJsonPath,
-    );
-
-    // Sync cards
-    await _sync(
-      EditUserSettings.edit.settings.cardFileID,
-      UserFiles.files.cardJsonName,
-      await UserFiles.files.cardJson,
-      EditUserSettings.edit.modifyCardFileID,
-      await UserFiles.files.cardJsonPath,
-    );
-
-    // Sync settings
-    await _sync(
+  /// Private method to sync settings.json file.
+  Future<void> _handleSettingsSync() async {
+    await _syncOperation(
       EditUserSettings.edit.settings.settingsFileID,
       UserFiles.files.settingsFileName,
       await UserFiles.files.settingsFile,
@@ -98,7 +81,58 @@ class GoogleServicesAPI {
     );
   }
 
-  /// Helper method for syncing file content.
+  /// Private method to sync card.json file.
+  ///
+  /// If necessary a new database is created from the synced information
+  Future<void> _handleCardSync() async {
+    final bool createCardDatabase = await _syncOperation(
+      EditUserSettings.edit.settings.cardFileID,
+      UserFiles.files.cardJsonName,
+      await UserFiles.files.cardJson,
+      EditUserSettings.edit.modifyCardFileID,
+      await UserFiles.files.cardJsonPath,
+    );
+
+    print(
+        'GoogleServices - _handleCardSync - CreateCardDatabase: $createCardDatabase');
+    if (createCardDatabase) CardFile.cardFile.createDatabase();
+  }
+
+  /// Private method to sync deck.json file.
+  ///
+  /// If necessary a new database is created from the synced information
+  Future<void> _handleDeckSync() async {
+    final bool createDeckDatabase = await _syncOperation(
+      EditUserSettings.edit.settings.deckFileID,
+      UserFiles.files.deckJsonName,
+      await UserFiles.files.deckJson,
+      EditUserSettings.edit.modifyDeckFileID,
+      await UserFiles.files.deckJsonPath,
+    );
+
+    print(
+        'GoogleServices - _handleCardSync - createDeckDatabase: $createDeckDatabase');
+    if (createDeckDatabase) DeckFile.deckFile.createDatabase();
+  }
+
+  /// Private method to sync topic.json file.
+  ///
+  /// If necessary a new database is created from the synced information
+  Future<void> _handleTopicSync() async {
+    final bool createTopicDatabase = await _syncOperation(
+      EditUserSettings.edit.settings.topicFileID,
+      UserFiles.files.topicJsonName,
+      await UserFiles.files.topicJson,
+      EditUserSettings.edit.modifyTopicFileID,
+      await UserFiles.files.topicJsonPath,
+    );
+
+    print(
+        'GoogleServices - _handleCardSync - createTopicDatabase: $createTopicDatabase');
+    if (createTopicDatabase) TopicFile.topicFile.createDatabase();
+  }
+
+  /// Private method for syncing file content.
   ///
   /// The parameters this method takes are used in the syncing process.
   /// [fileID] - The file id assigned in google drive for the particular file.
@@ -120,7 +154,10 @@ class GoogleServicesAPI {
   /// 5. However if even the drive doesn't have the file then a new one is
   /// created and then uploaded to the drive. The new [fileID] is stored
   /// locally.
-  Future<void> _sync(
+  ///
+  /// The return value for the function signifies if the local database needs
+  /// to be updated. True if update is necessary, false otherwise.
+  Future<bool> _syncOperation(
     String fileID,
     String metaName,
     io.File file,
@@ -138,33 +175,35 @@ class GoogleServicesAPI {
     if (fileID != null) {
       print('$debug fileID known. Updating file!'); // TODO DEBUG
       // We will upload the changes to drive.
-      await _driveApi.files.update(meta, fileID,
-          uploadMedia: Media(file.openRead(), await file.length()));
-      return;
+      await _driveApi.files.update(
+        meta,
+        fileID,
+        uploadMedia: Media(file.openRead(), await file.length()),
+      );
+      return false;
     }
 
     // File id isn't in local settings file. Check if file is in drive.
-    final String id = await _checkDriveForFileID(metaName);
+    String id = await _checkDriveForFileID(metaName);
 
     // File is in drive. Download and create local copy.
     if (id != null) {
       print('$debug file in drive. Making local copy!'); // TODO DEBUG
-      UserFiles.files.write(
-        await _downloadFileContentFromDrive(id),
-        file,
-        filePath,
-      );
-      return;
+      await _downloadFileContentFromDrive(id, file, filePath);
+      modify(id);
+      return true;
     }
 
     // File isn't in drive. Create and upload new instance.
     print('$debug fileID not known. Uploading for 1st time!'); // TODO DEBUG
-    _createNew(meta, file);
+    id = await _createNew(meta, file);
+    modify(id);
 
     print('$debug Finished syncing $metaName!'); // TODO DEBUG
+    return false;
   }
 
-  /// Helper method for getting the fileID of the file having [name] and
+  /// Private method for getting the fileID of the file having [name] and
   /// [description] as meta data.
   ///
   /// Returns the right file id or null.
@@ -193,31 +232,40 @@ class GoogleServicesAPI {
     return null;
   }
 
-  /// Helper method for downloading the contents of the file having the
+  /// Private method for downloading the contents of the file having the
   /// [fileID].
   ///
   /// Returns the contents as a string.
-  Future<String> _downloadFileContentFromDrive(String fileID) async {
+  Future<void> _downloadFileContentFromDrive(String fileID,
+      io.File file,
+      String filePath,) async {
     final String debug =
         'GoogleServicesAPI - _downloadFileContentFromDrive'; // TODO DEBUG
     final Media download = await _driveApi.files.get(
       fileID,
-      downloadOptions: DownloadOptions(),
+      downloadOptions: DownloadOptions.FullMedia,
     );
 
     final StringBuffer content = StringBuffer();
     download.stream.transform(Utf8Decoder()).transform(LineSplitter()).listen(
           (String line) => content.write(line),
-          onDone: () => print(content.toString()),
-          onError: (e) {
-            print('$debug Error occured! $e');
-            download.stream.listen((List<int> l) => content.write(l));
-          }, // TODO DEBUG
+      onDone: () async {
+        final String contentString = content.toString();
+        print('Content is $contentString}');
+        await UserFiles.files.write(
+          contentString,
+          file,
+          filePath,
         );
-    return content.toString();
+      },
+      onError: (e) {
+        print('$debug Error occured! $e');
+        download.stream.listen((List<int> l) => content.write(l));
+      }, // TODO DEBUG
+    );
   }
 
-  /// Helper method for creating a new file and uploading it to google drive.
+  /// Private method for creating a new file and uploading it to google drive.
   ///
   /// THe file will have [meta] as meta data and [file] as contents.
   Future<String> _createNew(File meta, io.File file) async {

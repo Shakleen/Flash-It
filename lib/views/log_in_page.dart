@@ -110,14 +110,14 @@ class _LogInPageState extends State<LogInPage> with TickerProviderStateMixin {
       );
 
   void _handleLogInButton() async {
-    bool result = await GoogleServicesAPI.gService.signIn();
+    final bool result = await GoogleServicesAPI.gService.signIn();
 
     if (result) _continue();
   }
 
   void _continue() {
     init.init().then((bool status) async {
-      await GoogleServicesAPI.gService.sync();
+      await GoogleServicesAPI.gService.syncData();
       setState(() {
         _animationState = true;
       });

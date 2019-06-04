@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flash_it/bloc/bloc_provider.dart';
 import 'package:flash_it/controllers/file_controller/card_file.dart';
+import 'package:flash_it/controllers/file_controller/edit_user_settings.dart';
 import 'package:flash_it/models/database/card_database.dart';
 import 'package:flash_it/models/entities/card_model.dart';
 
@@ -74,11 +75,11 @@ class CardDatabaseBloc implements BlocBase {
   ) {}
 
   Future<bool> insert(Map<String, dynamic> input) {
-    final DateTime now = DateTime.now();
-    input[cardAttributes[6][0]] =
-        DateTime(now.year, now.month, now.day).toString();
+    input[cardAttributes[0][0]] = EditUserSettings.edit.settings.cards;
+    input[cardAttributes[6][0]] = getCurrentDateAsString();
     return CardDatabase.cardDatabase.insert(input).then((bool status) {
       if (status) {
+        EditUserSettings.edit.incrementCardCount();
         CardFile.cardFile.add(input);
         getItems();
       }
@@ -98,9 +99,7 @@ class CardDatabaseBloc implements BlocBase {
 
   Future<bool> update(Map<String, dynamic> newValue,
       Map<String, dynamic> oldValue,) {
-    final DateTime now = DateTime.now();
-    newValue[cardAttributes[6][0]] =
-        DateTime(now.year, now.month, now.day).toString();
+    newValue[cardAttributes[6][0]] = getCurrentDateAsString();
     newValue[cardAttributes[4][0]] = 0;
     return updateDatabase(
       CardModel.fromMap(oldValue),
@@ -127,7 +126,7 @@ class CardDatabaseBloc implements BlocBase {
     final int memState = newValue.memoryState + 1;
     DateTime after = newValue.nextQuizDate;
     if (after.isBefore(DateTime.now())) after = DateTime.now();
-    final DateTime nextQuiz = after.add(Duration(hours: 12 * memState));
+    final DateTime nextQuiz = after.add(Duration(hours: 8 * memState));
     final CardModel oldValue = CardModel(
       question: newValue.question,
       answer: newValue.answer,
@@ -148,7 +147,7 @@ class CardDatabaseBloc implements BlocBase {
       cardID: oldValue.cardID,
       deckID: oldValue.deckID,
       important: oldValue.important,
-      nextQuizDate: oldValue.nextQuizDate,
+      nextQuizDate: DateTime.now(),
     );
     return updateDatabase(newValue, oldValue);
   }

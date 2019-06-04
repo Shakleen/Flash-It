@@ -26,7 +26,7 @@ class HomePage extends StatelessWidget {
               IconButton(
                 icon: Icon(Icons.sync),
                 tooltip: 'Sync data',
-                onPressed: () => GoogleServicesAPI.gService.sync(),
+                onPressed: () => GoogleServicesAPI.gService.syncData(),
               ),
               IconButton(
                 icon: Icon(Icons.add),
